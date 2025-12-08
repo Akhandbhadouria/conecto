@@ -9,72 +9,72 @@ Tweets - TweetShare
 
 
 <div class="tweet-container">
-   
-     <h3 class="tit">Public Feed</h3>
-    {% if tweets %}
-        <div class="masonry-grid">
-            {% for tweet in tweets %}
-            <div class="tweet-card" data-tweet-id="{{ tweet.id }}">
-                {% if tweet.photo %}
-                    <img src="{{ tweet.photo.url }}" class="tweet-image" alt="Tweet image">
-                {% else %}
-                    <div class="tweet-text-only">
-                        <p>{{ tweet.text|truncatewords:20 }}</p>
-                    </div>
-                {% endif %}
-                 <div class="tweet-actions">
-            <form method="post" action="{% url 'like_tweet' tweet.id %}" class="like-form">
-                {% csrf_token %}
-                <button type="submit" class="like-btn {% if request.user in tweet.likes.all %}liked{% endif %}">
-    <span class="like-icon">
-        {% if request.user in tweet.likes.all %}
-            ❤️
-        {% else %}
-            🤍
-        {% endif %}
-    </span>
-    <span class="like-count">{{ tweet.total_likes }}</span>
-</button>
-            </form>
-        </div>
-            </div>
-            {% endfor %}
-        </div>
 
-        <!-- Modal -->
-        <div class="modal-overlay" id="tweetModal">
-            <div class="modal-content">
-                <button class="modal-close" id="closeModal">&times;</button>
-                <div id="modalBody"></div>
+    <h3 class="tit">Public Feed</h3>
+    {% if tweets %}
+    <div class="masonry-grid">
+        {% for tweet in tweets %}
+        <div class="tweet-card" data-tweet-id="{{ tweet.id }}">
+            {% if tweet.photo %}
+            <img src="{{ tweet.photo.url }}" class="tweet-image" alt="Tweet image">
+            {% else %}
+            <div class="tweet-text-only">
+                <p>{{ tweet.text|truncatewords:20 }}</p>
+            </div>
+            {% endif %}
+            <div class="tweet-actions">
+                <form method="post" action="{% url 'like_tweet' tweet.id %}" class="like-form">
+                    {% csrf_token %}
+                    <button type="submit" class="like-btn {% if request.user in tweet.likes.all %}liked{% endif %}">
+                        <span class="like-icon">
+                            {% if request.user in tweet.likes.all %}
+                            ❤️
+                            {% else %}
+                            🤍
+                            {% endif %}
+                        </span>
+                        <span class="like-count">{{ tweet.total_likes }}</span>
+                    </button>
+                </form>
             </div>
         </div>
-    {% else %}
-        <!-- Empty State -->
-        <div class="empty-state">
-            <div class="empty-state-icon">📭</div>
-            <h2 class="empty-state-title">No tweets yet</h2>
-            <p class="empty-state-text">Be the first to share something!</p>
+        {% endfor %}
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="tweetModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeModal">&times;</button>
+            <div id="modalBody"></div>
         </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <h2 class="empty-state-title">No tweets yet</h2>
+        <p class="empty-state-text">Be the first to share something!</p>
+    </div>
     {% endif %}
 </div>
 
 <script>
     const tweetData = {
         {% for tweet in tweets %}
-        "{{ tweet.id }}": {
-            hasPhoto: {% if tweet.photo %}true{% else %}false{% endif %},
-            photoUrl: "{{ tweet.photo.url|default:'' }}",
+    "{{ tweet.id }}": {
+        hasPhoto: {% if tweet.photo %} true{% else %} false{% endif %},
+        photoUrl: "{% if tweet.photo %}{{ tweet.photo.url }}{% endif %}",
             text: `{{ tweet.text|escapejs }}`,
-            username: "{{ tweet.user.username|escapejs }}",
-            profileUrl: "{% url 'profile_detail' username=tweet.user.username %}",
-            hasAvatar: {% if tweet.user.userprofile.profile_photo %}true{% else %}false{% endif %},
-            avatarUrl: "{{ tweet.user.userprofile.profile_photo.url|default:'' }}",
+                username: "{{ tweet.user.username|escapejs }}",
+                    profileUrl: "{% url 'profile_detail' username=tweet.user.username %}",
+                        hasAvatar: {% if tweet.user.userprofile.profile_photo %} true{% else %} false{% endif %},
+        avatarUrl: "{% if tweet.user.userprofile.profile_photo %}{{ tweet.user.userprofile.profile_photo.url }}{% endif %}",
             timestamp: "{{ tweet.updated_at|date:'M d, Y H:i' }}",
-            isOwner: {% if tweet.user == user %}true{% else %}false{% endif %},
-            editUrl: "{% url 'tweet_edit' tweet.id %}",
+                isOwner: {% if tweet.user == user %} true{% else %} false{% endif %},
+        editUrl: "{% url 'tweet_edit' tweet.id %}",
             deleteUrl: "{% url 'tweet_delete' tweet.id %}"
-        }{% if not forloop.last %},{% endif %}
-        {% endfor %}
+    } {% if not forloop.last %}, {% endif %}
+    {% endfor %}
     };
 
     const modal = document.getElementById('tweetModal');
@@ -82,7 +82,7 @@ Tweets - TweetShare
     const closeBtn = document.getElementById('closeModal');
 
     document.querySelectorAll('.tweet-card').forEach(card => {
-        card.addEventListener('click', function() {
+        card.addEventListener('click', function () {
             const tweetId = this.getAttribute('data-tweet-id');
             openModal(tweetId);
         });
@@ -96,7 +96,7 @@ Tweets - TweetShare
 
         // User info
         html += '<div class="mock-user">';
-        
+
         // Avatar
         if (tweet.hasAvatar && tweet.avatarUrl) {
             html += `<div class="mock-avatar"><img src="${tweet.avatarUrl}" class="mock-avatar-img" alt="${tweet.username}"></div>`;
@@ -154,21 +154,21 @@ Tweets - TweetShare
 
     closeBtn.addEventListener('click', closeModal);
 
-    modal.addEventListener('click', function(e) {
+    modal.addEventListener('click', function (e) {
         if (e.target === modal) {
             closeModal();
         }
     });
 
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
             closeModal();
         }
     });
 
     // Prevent modal from closing when clicking on the image or action buttons
-    modalBody.addEventListener('click', function(e) {
-        if (e.target.classList.contains('mock-image') || 
+    modalBody.addEventListener('click', function (e) {
+        if (e.target.classList.contains('mock-image') ||
             e.target.closest('.mock-image') ||
             e.target.classList.contains('action-btn') ||
             e.target.closest('.action-btn')) {
@@ -176,40 +176,40 @@ Tweets - TweetShare
         }
     });
     document.querySelectorAll(".like-form").forEach(form => {
-    form.addEventListener("click", function(e) {
-        e.stopPropagation();   // STOP POPUP FROM OPENING
+        form.addEventListener("click", function (e) {
+            e.stopPropagation();   // STOP POPUP FROM OPENING
+        });
+
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            e.stopPropagation();   // ALSO STOP MODAL FROM TRIGGERING
+
+            const url = this.action;
+            const countSpan = this.querySelector(".like-count");
+            const icon = this.querySelector(".like-icon");
+            const btn = this.querySelector(".like-btn");
+
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": this.querySelector("[name=csrfmiddlewaretoken]").value,
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    countSpan.textContent = data.total_likes;
+
+                    if (data.liked) {
+                        btn.classList.add("liked");
+                        icon.textContent = "❤️";
+                    } else {
+                        btn.classList.remove("liked");
+                        icon.textContent = "🤍";
+                    }
+                })
+                .catch(error => console.log(error));
+        });
     });
-
-    form.addEventListener("submit", function(e) {
-        e.preventDefault();
-        e.stopPropagation();   // ALSO STOP MODAL FROM TRIGGERING
-
-        const url = this.action;
-        const countSpan = this.querySelector(".like-count");
-        const icon = this.querySelector(".like-icon");
-        const btn = this.querySelector(".like-btn");
-
-        fetch(url, {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": this.querySelector("[name=csrfmiddlewaretoken]").value,
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            countSpan.textContent = data.total_likes;
-
-            if (data.liked) {
-                btn.classList.add("liked");
-                icon.textContent = "❤️";
-            } else {
-                btn.classList.remove("liked");
-                icon.textContent = "🤍";
-            }
-        })
-        .catch(error => console.log(error));
-    });
-});
 
 </script>
 
