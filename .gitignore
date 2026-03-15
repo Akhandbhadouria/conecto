@@ -19,6 +19,12 @@ db.sqlite3
 # Node
 node_modules/
 
+# Virtual environment
+venv/
+
+# Redis
+dump.rdb
+
 # Other
 *.bak
 *.swp

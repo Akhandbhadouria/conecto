@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Tweet
+from .models import Tweet, UserProfile
 from .forms import TweetForm,UserRegrestrationForm
 from django.shortcuts import get_object_or_404,redirect # Fetches an object from the database or returns a 404 error if it doesn’t exist.
 from django.contrib.auth.decorators import login_required #login_required is used to restrict access to a view so that only authenticated (logged-in) users can access it.
@@ -7,6 +7,11 @@ from django.contrib.auth import login
 from django.http import Http404
 from django.contrib.auth import login
 from django.contrib.auth.backends import ModelBackend
+from django.contrib import messages
+from .moderation import check_image
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -36,11 +41,56 @@ def tweet_list(request):
 
 @login_required
 def tweet_create(request):
+    # Check if user is suspended
+    try:
+        profile = request.user.userprofile
+        if profile.is_suspended:
+            messages.error(
+                request,
+                f'⛔ Your posting ability is suspended due to repeated violations. '
+                f'Time remaining: {profile.suspension_remaining}'
+            )
+            return redirect('my_feed')
+    except UserProfile.DoesNotExist:
+        pass
+
     if request.method=="POST":
         form =TweetForm(request.POST,request.FILES) #→ builds the form with submitted data (including uploaded images).
         if form.is_valid():                          #checks if the data respects the model rules (max_length, required fields, etc).
             tweet=form.save(commit=False)            #creates a Tweet object but doesn’t save to DB yet (lets you modify before saving).
             tweet.user=request.user                  #This way, the currently logged-in user is linked to the tweet.
+
+            # === IMAGE MODERATION ===
+            uploaded_image = request.FILES.get('photo')
+            if uploaded_image:
+                result = check_image(uploaded_image)
+
+                if not result['is_safe']:
+                    # Record the violation
+                    try:
+                        profile = request.user.userprofile
+                        profile.record_violation()
+                        warning_msg = result['message']
+                        if profile.warning_count < UserProfile.MAX_WARNINGS:
+                            warning_msg += (
+                                f' (Warning {profile.warning_count}/{UserProfile.MAX_WARNINGS})'
+                            )
+                        else:
+                            warning_msg += (
+                                f' Your account has been suspended for '
+                                f'{UserProfile.SUSPENSION_HOURS} hours.'
+                            )
+                        messages.error(request, warning_msg)
+                    except UserProfile.DoesNotExist:
+                        messages.error(request, result['message'])
+
+                    logger.warning(
+                        f"NSFW upload blocked for user '{request.user.username}': "
+                        f"{result['detections']}"
+                    )
+                    return render(request, "tweet_form.html", {"form": form})
+            # === END MODERATION ===
+
             tweet.save()
             return redirect("my_feed")              #→ sends the user to the list view after creation.
     else:
@@ -53,11 +103,52 @@ def tweet_create(request):
 @login_required
 def tweet_edit(request,tweet_id):
     tweet=get_object_or_404(Tweet,pk= tweet_id,user=request.user)
+
+    # Check if user is suspended
+    try:
+        profile = request.user.userprofile
+        if profile.is_suspended:
+            messages.error(
+                request,
+                f'⛔ Your posting ability is suspended due to repeated violations. '
+                f'Time remaining: {profile.suspension_remaining}'
+            )
+            return redirect('my_feed')
+    except UserProfile.DoesNotExist:
+        pass
+
     if request.method=="POST":
         form=TweetForm(request.POST,request.FILES,instance=tweet)  #tells the form that you’re editing an existing Tweet object, not creating a new one.
         if form.is_valid():                          #checks if the data respects the model rules (max_length, required fields, etc).
             tweet=form.save(commit=False)            #creates a Tweet object but doesn’t save to DB yet (lets you modify before saving).
             tweet.user=request.user                  #This way, the currently logged-in user is linked to the tweet.
+
+            # === IMAGE MODERATION ===
+            uploaded_image = request.FILES.get('photo')
+            if uploaded_image:
+                result = check_image(uploaded_image)
+
+                if not result['is_safe']:
+                    try:
+                        profile = request.user.userprofile
+                        profile.record_violation()
+                        warning_msg = result['message']
+                        if profile.warning_count < UserProfile.MAX_WARNINGS:
+                            warning_msg += (
+                                f' (Warning {profile.warning_count}/{UserProfile.MAX_WARNINGS})'
+                            )
+                        else:
+                            warning_msg += (
+                                f' Your account has been suspended for '
+                                f'{UserProfile.SUSPENSION_HOURS} hours.'
+                            )
+                        messages.error(request, warning_msg)
+                    except UserProfile.DoesNotExist:
+                        messages.error(request, result['message'])
+
+                    return render(request, "tweet_form.html", {"form": form})
+            # === END MODERATION ===
+
             tweet.save()
             return redirect("tweet_list")   
     else:
@@ -158,6 +249,7 @@ def account_settings(request):
         "password_form": password_form,
         "google_user": google_user,
     })
+
 ### Step-by-Step Flow of Django User Registration (Hinglish me samjha hua)
 
 # 1.                                                       **User register page open karta hai (GET request hoti hai)**

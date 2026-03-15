@@ -6,94 +6,113 @@
 
 <div class="dashboard">
     <!-- LEFT SIDEBAR - PROFILE -->
-   <!-- LEFT SIDEBAR - PROFILE -->
-<div class="left-sidebar">
-    <div class="profile-card">
-        <!-- Left Column: Profile Info -->
-        <div class="profile-photo-wrapper">
-            {% if profile.profile_photo %}
-            <img src="{{ profile.profile_photo.url }}" alt="Profile" class="profile-photo">
-            {% else %}
-            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop"
-                alt="Default Profile" class="profile-photo">
-            {% endif %}
-            <div class="status-indicator"></div>
-        </div>
-        
-        <div class="profile-info-left">
-            <div class="profile-name-container">
-                <h2 class="profile-name">{{ profile.user.username }}</h2>
-                {% if profile.profession %}
-                <span class="profile-profession">{{ profile.profession }}</span>
-                {% endif %}
-                
-            </div>
-            
-            {% if profile.email %}
-            <p class="profile-email">{{ profile.email }}</p>
-            {% endif %}
-            
-            {% if profile.bio %}
-            <p class="profile-bio">BIO: {{ profile.bio }}</p>
-            {% endif %}
-        </div>
-
-        <!-- Right Column: Stats -->
-        <div class="stats-grid">
-            <div class="stat-box">
-                <div class="stat-number">{{ profile.user.tweet_set.count|default:"0" }}</div>
-                <div class="stat-label">Posts</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-number">{{ profile.followers_count }}</div>
-                <div class="stat-label">Followers</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-number">{{ profile.following_count }}</div>
-                <div class="stat-label">Following</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-number">{{ profile.total_likes_received|default:"0" }}</div>
-                <div class="stat-label">Total Likes</div>
-            </div>
-        </div>
-
-        <!-- Mobile Action Buttons -->
-        {% if request.user != profile.user %}
-        <div class="mobile-action-buttons">
-            <!-- Follow/Following button -->
-            <form method="post" action="{% url 'follow_user' profile.user.username %}" class="mobile-follow-form">
-                {% csrf_token %}
-                {% if request.user in profile.followers.all %}
-                <button type="submit" class="mobile-action-btn mobile-follow-btn">
-                    <span>👥</span>
-                    Following
-                </button>
+    <!-- LEFT SIDEBAR - PROFILE -->
+    <div class="left-sidebar">
+        <div class="profile-card">
+            <!-- Left Column: Profile Info -->
+            <div class="profile-photo-wrapper">
+                {% if profile.profile_photo %}
+                <img src="{{ profile.profile_photo.url }}" alt="Profile" class="profile-photo">
                 {% else %}
-                <button type="submit" class="mobile-action-btn mobile-follow-btn">
-                    <span>➕</span>
-                    Follow
-                </button>
+                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop"
+                    alt="Default Profile" class="profile-photo">
                 {% endif %}
-            </form>
+                <div class="status-indicator"></div>
+            </div>
 
-            <!-- Message button -->
-            {% if request.user.is_authenticated and profile_user %}
-            <a href="{% url 'start_chat' username=profile_user.username %}" class="mobile-action-btn mobile-message-btn">
-                <span>💬</span>
-                Message
-            </a>
+            <div class="profile-info-left">
+                <div class="profile-name-container">
+                    <h2 class="profile-name">{{ profile.user.username }}</h2>
+                    {% if profile.profession %}
+                    <span class="profile-profession">{{ profile.profession }}</span>
+                    {% endif %}
+
+                </div>
+
+                {% if profile.email %}
+                <p class="profile-email">{{ profile.email }}</p>
+                {% endif %}
+
+                {% if profile.bio %}
+                <p class="profile-bio">BIO: {{ profile.bio }}</p>
+                {% endif %}
+
+                <!-- Moderation Warning & Suspension Status -->
+                {% if profile.warning_count > 0 %}
+                <div class="moderation-status"
+                    style="margin-top: 15px; padding: 12px; border-radius: 8px; font-size: 0.9em; text-align: left; {% if profile.is_suspended %}background-color: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545;{% else %}background-color: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; color: #b78a00;{% endif %}">
+                    {% if profile.is_suspended %}
+                    <strong style="display: flex; align-items: center; gap: 5px;"><span
+                            style="font-size:1.2em">🚫</span> Account Suspended</strong>
+                    <div style="margin-top: 5px; opacity: 0.9;">Time remaining: <strong>{{ profile.suspension_remaining
+                            }}</strong></div>
+                    {% else %}
+                    <strong style="display: flex; align-items: center; gap: 5px;"><span
+                            style="font-size:1.2em">⚠️</span> Content Warning</strong>
+                    <div style="margin-top: 5px; opacity: 0.9;">Strikes: <strong>{{ profile.warning_count }}/3</strong>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Right Column: Stats -->
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-number">{{ profile.user.tweet_set.count|default:"0" }}</div>
+                    <div class="stat-label">Posts</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">{{ profile.followers_count }}</div>
+                    <div class="stat-label">Followers</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">{{ profile.following_count }}</div>
+                    <div class="stat-label">Following</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">{{ profile.total_likes_received|default:"0" }}</div>
+                    <div class="stat-label">Total Likes</div>
+                </div>
+            </div>
+
+            <!-- Mobile Action Buttons -->
+            {% if request.user != profile.user %}
+            <div class="mobile-action-buttons">
+                <!-- Follow/Following button -->
+                <form method="post" action="{% url 'follow_user' profile.user.username %}" class="mobile-follow-form">
+                    {% csrf_token %}
+                    {% if request.user in profile.followers.all %}
+                    <button type="submit" class="mobile-action-btn mobile-follow-btn">
+                        <span>👥</span>
+                        Following
+                    </button>
+                    {% else %}
+                    <button type="submit" class="mobile-action-btn mobile-follow-btn">
+                        <span>➕</span>
+                        Follow
+                    </button>
+                    {% endif %}
+                </form>
+
+                <!-- Message button -->
+                {% if request.user.is_authenticated and profile_user %}
+                <a href="{% url 'start_chat' username=profile_user.username %}"
+                    class="mobile-action-btn mobile-message-btn">
+                    <span>💬</span>
+                    Message
+                </a>
+                {% endif %}
+            </div>
             {% endif %}
-        </div>
-        {% endif %}
 
-        <div class="theme-toggle-wrapper">
-            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
-                <i class="fas fa-moon" id="theme-icon"></i>
-            </button>
+            <div class="theme-toggle-wrapper">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
     <!-- MAIN CONTENT -->
     <div class="main-content">
@@ -112,7 +131,7 @@
                             <button type="submit" class="btn btn-secondary">Following</button>
                         </div>
                         {% if request.user.is_authenticated and profile_user %}
-                        <div> 
+                        <div>
                             <a href="{% url 'start_chat' username=profile_user.username %}" class="btn btn-primary">
                                 Message
                             </a>
@@ -131,14 +150,13 @@
             {% if tweets %}
             <div class="masonry-grid" id="tweetsGrid">
                 {% for tweet in tweets %}
-                <div class="tweet-card {% if forloop.counter > 4 %}hidden{% endif %}" 
-                     data-tweet-id="{{ tweet.id }}" 
-                     data-tweet-text="{{ tweet.text }}"
-                     data-tweet-photo="{% if tweet.photo %}{{ tweet.photo.url }}{% endif %}"
-                     data-tweet-username="{{ tweet.user.username }}"
-                     data-tweet-date="{{ tweet.updated_at|date:'M d, Y' }}"
-                     data-tweet-userphoto="{% if tweet.user.userprofile.profile_photo %}{{ tweet.user.userprofile.profile_photo.url }}{% endif %}"
-                     data-tweet-likes="{{ tweet.total_likes }}">
+                <div class="tweet-card {% if forloop.counter > 4 %}hidden{% endif %}" data-tweet-id="{{ tweet.id }}"
+                    data-tweet-text="{{ tweet.text }}"
+                    data-tweet-photo="{% if tweet.photo %}{{ tweet.photo.url }}{% endif %}"
+                    data-tweet-username="{{ tweet.user.username }}"
+                    data-tweet-date="{{ tweet.updated_at|date:'M d, Y' }}"
+                    data-tweet-userphoto="{% if tweet.user.userprofile.profile_photo %}{{ tweet.user.userprofile.profile_photo.url }}{% endif %}"
+                    data-tweet-likes="{{ tweet.total_likes }}">
 
                     {% if tweet.photo %}
                     <img src="{{ tweet.photo.url }}" class="tweet-image" alt="Tweet Photo">
@@ -152,16 +170,17 @@
                     <div class="tweet-actions">
                         <form method="post" action="{% url 'like_tweet' tweet.id %}" class="like-form">
                             {% csrf_token %}
-                           <button type="submit" class="like-btn {% if request.user in tweet.likes.all %}liked{% endif %}">
-    <span class="like-icon">
-        {% if request.user in tweet.likes.all %}
-            ❤️
-        {% else %}
-            🤍
-        {% endif %}
-    </span>
-    <span class="like-count">{{ tweet.total_likes }}</span>
-</button>
+                            <button type="submit"
+                                class="like-btn {% if request.user in tweet.likes.all %}liked{% endif %}">
+                                <span class="like-icon">
+                                    {% if request.user in tweet.likes.all %}
+                                    ❤️
+                                    {% else %}
+                                    🤍
+                                    {% endif %}
+                                </span>
+                                <span class="like-count">{{ tweet.total_likes }}</span>
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -240,7 +259,7 @@
                 <i class="fas fa-user-friends"></i> View Following
             </a>
             <a href="{% url 'account_settings' %}" class="profile-link">
-             <i class="fa fa-cog" aria-hidden="true"></i> Update Password
+                <i class="fa fa-cog" aria-hidden="true"></i> Update Password
             </a>
             {% if request.user == profile.user %}
             <a href="{% url 'delete_account' %}" class="btn btn-danger">
@@ -262,7 +281,7 @@
 </div>
 
 <script>
-  // Tweet Modal functionality
+    // Tweet Modal functionality
     document.addEventListener('DOMContentLoaded', function () {
         const tweetCards = document.querySelectorAll('.tweet-card');
         const tweetModal = document.getElementById('tweetModal');
@@ -274,13 +293,13 @@
 
         // Show More functionality
         if (showMoreBtn) {
-            showMoreBtn.addEventListener('click', function() {
+            showMoreBtn.addEventListener('click', function () {
                 const hiddenTweets = document.querySelectorAll('.tweet-card.hidden');
-                
+
                 // Show loading spinner
                 showMoreBtn.style.display = 'none';
                 loadingSpinner.style.display = 'block';
-                
+
                 // Simulate loading delay for better UX
                 setTimeout(() => {
                     // Show all hidden tweets
@@ -290,13 +309,13 @@
                             tweet.classList.add('show');
                         }, index * 100); // Stagger the animation
                     });
-                    
+
                     // Hide the show more button after showing all tweets
                     setTimeout(() => {
                         showMoreBtn.style.display = 'none';
                         loadingSpinner.style.display = 'none';
                     }, hiddenTweets.length * 100 + 500);
-                    
+
                 }, 800);
             });
         }
@@ -406,44 +425,41 @@
             }, index * 100);
         });
     });
-      document.querySelectorAll(".like-form").forEach(form => {
-    form.addEventListener("click", function(e) {
-        e.stopPropagation();   // STOP POPUP FROM OPENING
+    document.querySelectorAll(".like-form").forEach(form => {
+        form.addEventListener("click", function (e) {
+            e.stopPropagation();   // STOP POPUP FROM OPENING
+        });
+
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            e.stopPropagation();   // ALSO STOP MODAL FROM TRIGGERING
+
+            const url = this.action;
+            const countSpan = this.querySelector(".like-count");
+            const icon = this.querySelector(".like-icon");
+            const btn = this.querySelector(".like-btn");
+
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": this.querySelector("[name=csrfmiddlewaretoken]").value,
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    countSpan.textContent = data.total_likes;
+
+                    if (data.liked) {
+                        btn.classList.add("liked");
+                        icon.textContent = "❤️";
+                    } else {
+                        btn.classList.remove("liked");
+                        icon.textContent = "🤍";
+                    }
+                })
+                .catch(error => console.log(error));
+        });
     });
-
-    form.addEventListener("submit", function(e) {
-        e.preventDefault();
-        e.stopPropagation();   // ALSO STOP MODAL FROM TRIGGERING
-
-        const url = this.action;
-        const countSpan = this.querySelector(".like-count");
-        const icon = this.querySelector(".like-icon");
-        const btn = this.querySelector(".like-btn");
-
-        fetch(url, {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": this.querySelector("[name=csrfmiddlewaretoken]").value,
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            countSpan.textContent = data.total_likes;
-
-            if (data.liked) {
-                btn.classList.add("liked");
-                icon.textContent = "❤️";
-            } else {
-                btn.classList.remove("liked");
-                icon.textContent = "🤍";
-            }
-        })
-        .catch(error => console.log(error));
-    });
-});
 </script>
 
 {% endblock %}
-
-
-

@@ -11,12 +11,6 @@ class TweetForm(forms.ModelForm):
         model=Tweet
         fields=['text','photo']
 
-# class UserRegrestrationForm(UserCreationForm):
-#     email=forms.EmailField()
-#     class Meta:
-#         model=User
-#         fields=('username','email','password1','password2')
-
 
 class UserRegrestrationForm(UserCreationForm):
     email = forms.EmailField(widget=forms.EmailInput(attrs={'class':'form-input'}))
@@ -27,9 +21,6 @@ class UserRegrestrationForm(UserCreationForm):
     class Meta:
         model = User
         fields = ('username','email','password1','password2')
-
-   
-
 # What this does
 # model = User
 # This tells Django that this form is associated with the User model (built-in django.contrib.auth.models.User).
@@ -58,9 +49,14 @@ class UserProfileForm(forms.ModelForm):
 from django import forms
 from .models import UserProfile
 
-class UserProfileForm(forms.ModelForm):
+class UserProfileForm(forms.ModelForm): #Automatically maps model fields → form fields
     class Meta:
         model = UserProfile
+                                # UserProfile.bio          → form.bio
+                                # UserProfile.profession   → form.profession
+                                # UserProfile.email        → form.email
+                                # UserProfile.profile_photo → form.profile_photo
+
         fields = ['profile_photo', 'profession', 'email', 'bio']  # Saare fields include hain
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 4, 'class': 'form-control', 'placeholder': 'Enter your bio...'}),

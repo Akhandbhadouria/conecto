@@ -45,6 +45,30 @@
 
             <!-- Tweet Form -->
             <div class="form-container">
+                <!-- Moderation Messages -->
+                {% if messages %}
+                <div class="moderation-alerts">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}" id="moderationAlert">
+                        <div class="alert-icon">
+                            {% if message.tags == 'error' %}
+                                🛡️
+                            {% else %}
+                                ℹ️
+                            {% endif %}
+                        </div>
+                        <div class="alert-content">
+                            <strong>
+                                {% if message.tags == 'error' %}Content Violation{% else %}Notice{% endif %}
+                            </strong>
+                            <p>{{ message }}</p>
+                        </div>
+                        <button class="alert-dismiss" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
                 <form action="" method="post" enctype="multipart/form-data" class="tweet-form">
                     {% csrf_token %}
                     

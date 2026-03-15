@@ -25,3 +25,7 @@ dj-database-url==2.2.0
 redis==5.2.1
 channels-redis==4.2.1
 mysqlclient==2.2.8
+nudenet==3.4.2
+onnxruntime==1.24.3
+opencv-python-headless==4.13.0.92
+numpy==2.4.3
