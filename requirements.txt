@@ -32,3 +32,6 @@ numpy==2.4.3
 scikit-learn==1.8.0
 alt-profanity-check==1.8.0
 scipy==1.17.1
+daphne==4.1.2
+cloudinary==1.41.0
+django-cloudinary-storage==0.3.0

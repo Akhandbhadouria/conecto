@@ -52,6 +52,8 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'cloudinary_storage',
+    'cloudinary',
 ]
 
 MIDDLEWARE = [
@@ -150,7 +152,12 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT=BASE_DIR /"media"
+MEDIA_ROOT = BASE_DIR / "media"
+
+# Render Ephemeral Disk Fix (Cloudinary Storage)
+# Since Render deletes all user uploads on every deploy, we save images to Cloudinary.
+if config('CLOUDINARY_URL', default=None):
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 
 import os
@@ -204,8 +211,8 @@ ACCOUNT_SIGNUP_FIELDS = ['email', 'username', 'password1', 'password2']
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
-            'client_id': config('GOOGLE_CLIENT_ID', default='998688829192-l1rjsnd7ncmvr6muei52it3cr5m7c655.apps.googleusercontent.com'),
-            'secret': config('GOOGLE_CLIENT_SECRET', default='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'),
+            'client_id': config('GOOGLE_CLIENT_ID', default='your-google-client-id'),
+            'secret': config('GOOGLE_CLIENT_SECRET', default='your-google-client-secret'),
             'key': ''
         },
          'OAUTH_PKCE_ENABLED': True,
