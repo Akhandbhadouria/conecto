@@ -1,19 +1,81 @@
 from django.shortcuts import render
-from .models import Tweet, UserProfile
-from .forms import TweetForm,UserRegrestrationForm
+from .models import Tweet, UserProfile, Comment
+from .forms import TweetForm, UserRegrestrationForm, CommentForm
 from django.shortcuts import get_object_or_404,redirect # Fetches an object from the database or returns a 404 error if it doesn’t exist.
 from django.contrib.auth.decorators import login_required #login_required is used to restrict access to a view so that only authenticated (logged-in) users can access it.
 from django.contrib.auth import login
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.contrib.auth import login
 from django.contrib.auth.backends import ModelBackend
 from django.contrib import messages
 from .moderation import check_image
+from .nlp_moderation import check_comment_text
 import logging
 
 logger = logging.getLogger(__name__)
 
 
+
+@login_required
+def add_comment(request, tweet_id):
+    """Add a comment to a tweet — runs NLP AI moderation before saving."""
+    tweet = get_object_or_404(Tweet, id=tweet_id)
+
+    # Check if user is suspended
+    try:
+        profile = request.user.userprofile
+        if profile.is_suspended:
+            messages.error(
+                request,
+                f'⛔ Your commenting ability is suspended due to repeated violations. '
+                f'Time remaining: {profile.suspension_remaining}'
+            )
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+    except UserProfile.DoesNotExist:
+        pass
+
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            text = form.cleaned_data['text']
+
+            # === NLP COMMENT MODERATION ===
+            result = check_comment_text(request.user, text)
+
+            if not result['is_safe']:
+                # Record the violation on the user profile
+                try:
+                    profile = request.user.userprofile
+                    profile.record_violation()
+                    warning_msg = result['message']
+                    if profile.warning_count < UserProfile.MAX_WARNINGS:
+                        warning_msg += (
+                            f' (Warning {profile.warning_count}/{UserProfile.MAX_WARNINGS})'
+                        )
+                    else:
+                        warning_msg += (
+                            f' Your account has been suspended for '
+                            f'{UserProfile.SUSPENSION_HOURS} hours.'
+                        )
+                    messages.error(request, warning_msg)
+                except UserProfile.DoesNotExist:
+                    messages.error(request, result['message'])
+
+                logger.warning(
+                    f"ABUSIVE comment blocked for user '{request.user.username}': "
+                    f"'{text[:80]}'"
+                )
+                return redirect(request.META.get('HTTP_REFERER', '/'))
+            # === END MODERATION ===
+
+            # Safe → save the comment
+            comment = form.save(commit=False)
+            comment.user = request.user
+            comment.tweet = tweet
+            comment.save()
+            messages.success(request, 'Comment posted!')
+
+    return redirect(request.META.get('HTTP_REFERER', '/'))
 
 
 def home(request):

@@ -42,6 +42,10 @@ Tweets - TweetShare
                     </button>
 
                 </form>
+                <div class="comment-btn-wrapper" style="display:flex;align-items:center;gap:5px;color:#718096;margin-left:10px;cursor:pointer;">
+                    <span>💬</span>
+                    <span>{{ tweet.comments.count }}</span>
+                </div>
             </div>
         </div>
         {% endfor %}
@@ -78,7 +82,28 @@ Tweets - TweetShare
             timestamp: "{{ tweet.updated_at|date:'M d, Y H:i' }}",
                 isOwner: {% if tweet.user == user %} true{% else %} false{% endif %},
         editUrl: "{% url 'tweet_edit' tweet.id %}",
-            deleteUrl: "{% url 'tweet_delete' tweet.id %}"
+            deleteUrl: "{% url 'tweet_delete' tweet.id %}",
+            commentsHtml: `
+                <div class="comments-section" style="margin-top:15px;border-top:1px solid #e2e8f0;padding-top:15px;">
+                    <h4 style="margin-bottom:10px;font-size:1rem;color:#2d3748;">Comments ({{ tweet.comments.count }})</h4>
+                    <div style="max-height:200px;overflow-y:auto;margin-bottom:10px;">
+                        {% for comment in tweet.comments.all %}
+                        <div style="padding:8px;background:rgba(0,0,0,0.03);border-radius:8px;margin-bottom:6px;">
+                            <strong style="color:#4a5568;">{{ comment.user.username }}</strong>
+                            <span style="font-size:0.8rem;color:#a0aec0;margin-left:5px;">{{ comment.created_at|date:"M d, H:i" }}</span>
+                            <div style="margin-top:4px;font-size:0.9rem;color:#2d3748;">{{ comment.text|escapejs }}</div>
+                        </div>
+                        {% empty %}
+                        <p style="color:#a0aec0;font-size:0.9rem;text-align:center;">No comments yet.</p>
+                        {% endfor %}
+                    </div>
+                    <form action="{% url 'add_comment' tweet.id %}" method="post" style="display:flex;gap:8px;">
+                        {% csrf_token %}
+                        <input type="text" name="text" placeholder="Add a comment..." required maxlength="500" style="flex:1;padding:8px 12px;border:1px solid #e2e8f0;border-radius:20px;outline:none;font-size:0.9rem;">
+                        <button type="submit" style="background:#667eea;color:white;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;font-size:0.9rem;">Post</button>
+                    </form>
+                </div>
+            `
     } {% if not forloop.last %}, {% endif %}
     {% endfor %}
     };
@@ -140,6 +165,9 @@ Tweets - TweetShare
             html += `</form>`;
             html += `</div>`;
         }
+
+        // Comments
+        html += tweet.commentsHtml;
 
         html += '</div>'; // close mock-tweet
 

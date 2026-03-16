@@ -1,5 +1,5 @@
 from django import forms
-from .models import Tweet
+from .models import Tweet, Comment
 import re
 
 from django.contrib.auth.models import User
@@ -10,6 +10,20 @@ class TweetForm(forms.ModelForm):
     class Meta:
         model=Tweet
         fields=['text','photo']
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['text']
+        widgets = {
+            'text': forms.Textarea(attrs={
+                'class': 'comment-input',
+                'rows': 2,
+                'placeholder': 'Write your comment…',
+                'maxlength': '500',
+            })
+        }
 
 
 class UserRegrestrationForm(UserCreationForm):

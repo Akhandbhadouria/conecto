@@ -37,8 +37,8 @@
                 <p class="profile-bio">BIO: {{ profile.bio }}</p>
                 {% endif %}
 
-                <!-- Moderation Warning & Suspension Status -->
-                {% if profile.warning_count > 0 %}
+                <!-- Moderation Warning & Suspension Status (only visible to profile owner) -->
+                {% if request.user == profile.user and profile.warning_count > 0 %}
                 <div class="moderation-status"
                     style="margin-top: 15px; padding: 12px; border-radius: 8px; font-size: 0.9em; text-align: left; {% if profile.is_suspended %}background-color: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545;{% else %}background-color: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; color: #b78a00;{% endif %}">
                     {% if profile.is_suspended %}
@@ -182,6 +182,10 @@
                                 <span class="like-count">{{ tweet.total_likes }}</span>
                             </button>
                         </form>
+                        <div class="comment-btn-wrapper" style="display:flex;align-items:center;gap:5px;color:#718096;margin-left:10px;cursor:pointer;">
+                            <span>💬</span>
+                            <span>{{ tweet.comments.count }}</span>
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
@@ -380,6 +384,13 @@
                         <span class="tweet-modal-username">${tweet.username}</span>
                     </div>
                     <div class="tweet-modal-date">${tweet.date}</div>
+                </div>
+                <div class="comments-section" style="margin-top:15px;border-top:1px solid #e2e8f0;padding-top:15px;">
+                    <form action="/tweet/${tweet.id}/comment/" method="post" style="display:flex;gap:8px;">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${document.querySelector('[name=csrfmiddlewaretoken]').value}">
+                        <input type="text" name="text" placeholder="Add a comment..." required maxlength="500" style="flex:1;padding:8px 12px;border:1px solid #e2e8f0;border-radius:20px;outline:none;font-size:0.9rem;">
+                        <button type="submit" style="background:#667eea;color:white;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;font-size:0.9rem;">Post</button>
+                    </form>
                 </div>
             `;
 

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Tweet, UserProfile
+from .models import Tweet, UserProfile, Comment, ModerationLog
 
 
 @admin.register(Tweet)
@@ -24,3 +24,18 @@ class UserProfileAdmin(admin.ModelAdmin):
     def suspension_remaining(self, obj):
         return obj.suspension_remaining or '—'
     suspension_remaining.short_description = 'Suspension Remaining'
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('user', 'tweet', 'text', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('user__username', 'text')
+
+
+@admin.register(ModerationLog)
+class ModerationLogAdmin(admin.ModelAdmin):
+    list_display = ('user', 'prediction', 'timestamp', 'comment_text')
+    list_filter = ('prediction', 'timestamp')
+    search_fields = ('user__username', 'comment_text')
+    readonly_fields = ('user', 'comment_text', 'prediction', 'timestamp')

@@ -33,6 +33,7 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(next_page='/'), name="logout"),
 
     path("<int:tweet_id>/like/", views.like_tweet, name="like_tweet"),  # NEW
+    path("<int:tweet_id>/comment/", views.add_comment, name="add_comment"),  # COMMENT
 
     path('create-profile/', views.create_profile, name='create_profile'),
     path('profile/<str:username>/follow/', views.follow_user, name='follow_user'),

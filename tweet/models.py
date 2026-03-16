@@ -90,6 +90,34 @@ class UserProfile(models.Model):
         return Tweet.objects.filter(user=self.user).aggregate(
             total_likes=Count('likes')
         )['total_likes'] or 0
+
+
+class Comment(models.Model):
+    """Comment on a Tweet — like Instagram comments."""
+    tweet = models.ForeignKey(Tweet, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f'Comment by {self.user.username} on tweet {self.tweet.id}'
+
+
+class ModerationLog(models.Model):
+    """Audit log for every AI moderation prediction."""
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    comment_text = models.TextField()
+    prediction = models.CharField(max_length=50)  # 'safe' or 'abusive'
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.prediction} — {self.user.username if self.user else 'Unknown'} @ {self.timestamp}"
     
 
 
